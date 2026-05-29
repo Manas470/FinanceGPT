@@ -144,7 +144,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check deployment secrets
+        id: check
+        run: |
+          if [ -z "$PROD_HOST" ]; then
+            echo "No PROD_HOST secret configured — skipping deploy"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+
       - name: Deploy via SSH
+        if: steps.check.outputs.skip != 'true'
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.PROD_HOST }}
